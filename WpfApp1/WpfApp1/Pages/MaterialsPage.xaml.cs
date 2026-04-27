@@ -129,12 +129,10 @@ namespace WpfApp1.Pages
         {
             if (obj is Материалы item)
             {
-                // Поиск по тексту
                 string searchText = MaterialsSearchTextBox.Text?.ToLower() ?? "";
                 bool matchesSearch = string.IsNullOrWhiteSpace(searchText) || 
                                      (item.Название != null && item.Название.ToLower().Contains(searchText));
 
-                // Фильтр по ComboBox
                 string selectedUnit = UnitFilterComboBox.SelectedItem as string ?? "Все";
                 bool matchesUnit = selectedUnit == "Все" || item.ЕдиницаИзмерения == selectedUnit;
 

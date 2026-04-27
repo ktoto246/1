@@ -13,7 +13,6 @@ namespace WpfApp1.Pages
     {
         private УчетСебестоимостиContext _context;
 
-        // Свойства для привязки (Binding) к графикам в XAML
         public SeriesCollection BarSeries { get; set; }
         public string[] BarLabels { get; set; }
         public Func<double, string> Formatter { get; set; }
@@ -23,12 +22,10 @@ namespace WpfApp1.Pages
         {
             InitializeComponent();
 
-            // Инициализируем коллекции, чтобы WPF не выкинул NullReference
             BarSeries = new SeriesCollection();
             PieSeries = new SeriesCollection();
             Formatter = value => value.ToString("N2") + " ₽";
 
-            // Говорим окну, что данные для биндинга лежат прямо в этом классе
             DataContext = this;
 
             LoadData();
@@ -38,12 +35,10 @@ namespace WpfApp1.Pages
         {
             _context = new УчетСебестоимостиContext();
 
-            // Грузим продукцию для ComboBox и столбчатого графика
             var products = _context.Продукцияs.ToList();
 
             CmbProducts.ItemsSource = products;
 
-            // --- 1. ЗАПОЛНЯЕМ СТОЛБЧАТЫЙ ГРАФИК ---
             BarSeries.Clear();
             BarLabels = products.Select(p => p.Название).ToArray();
 
@@ -53,19 +48,16 @@ namespace WpfApp1.Pages
                 Values = new ChartValues<decimal>(products.Select(p => p.Себестоимость))
             });
 
-            // Выбираем первый товар в списке по умолчанию, чтобы нарисовать бублик
             if (products.Any())
             {
                 CmbProducts.SelectedIndex = 0;
             }
         }
 
-        // --- 2. ЗАПОЛНЯЕМ КРУГОВОЙ ГРАФИК ПРИ СМЕНЕ ТОВАРА ---
         private void CmbProducts_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (CmbProducts.SelectedItem is Продукция selectedProduct)
             {
-                // Подтягиваем связанные данные для выбранного товара
                 var productDetails = _context.Продукцияs
                     .Include(p => p.СоставПродукцииs)
                         .ThenInclude(c => c.IdМатериалаNavigation)
@@ -74,12 +66,10 @@ namespace WpfApp1.Pages
 
                 if (productDetails == null) return;
 
-                // Считаем суммы
                 decimal materialCost = productDetails.СоставПродукцииs.Sum(c => c.Количество * c.IdМатериалаNavigation.ЦенаЗаЕдиницу);
                 decimal laborCost = productDetails.Трудозатратыs.Sum(t => t.СтоимостьРаботы);
                 decimal overhead = productDetails.НакладныеРасходы;
 
-                // Чистим старый пирог и рисуем новый
                 PieSeries.Clear();
 
                 PieSeries.Add(new PieSeries

@@ -134,3 +134,4 @@ D:\Курсовые\Семен\WpfApp1\WpfApp1\bin\Debug\net8.0-windows\LiveChar
 D:\Курсовые\Семен\WpfApp1\WpfApp1\bin\Debug\net8.0-windows\LiveCharts.Wpf.dll
 D:\Курсовые\Семен\WpfApp1\WpfApp1\obj\Debug\net8.0-windows\Pages\DashboardPage.baml
 D:\Курсовые\Семен\WpfApp1\WpfApp1\obj\Debug\net8.0-windows\Pages\DashboardPage.g.cs
+D:\Курсовые\Семен\WpfApp1\WpfApp1\obj\Debug\net8.0-windows\WpfApp1.sourcelink.json

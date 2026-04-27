@@ -15,7 +15,6 @@ namespace WpfApp1.Pages
         private readonly УчетСебестоимостиContext _context;
         private СоставПродукции _currentComposition;
 
-        // Поле
         private ICollectionView _compositionView;
 
         public CompositionPage()
@@ -35,11 +34,9 @@ namespace WpfApp1.Pages
             CmbProduct.ItemsSource = _context.Продукцияs.Local.ToObservableCollection();
             CmbMaterial.ItemsSource = _context.Материалыs.Local.ToObservableCollection();
 
-            // В конструкторе страницы (после присвоения ItemsSource для CompositionDataGrid):
             _compositionView = CollectionViewSource.GetDefaultView(CompositionGrid.ItemsSource);
             _compositionView.Filter = CompositionFilter;
 
-            // Подгружаем список продуктов из ItemsSource (Local)
             var products = _context.СоставПродукцииs.Local
                 .Select(c => c.IdПродуктаNavigation)
                 .Where(p => p != null)
@@ -63,7 +60,6 @@ namespace WpfApp1.Pages
                 CmbMaterial.SelectedValue = selected.IdМатериала;
                 TxtQuantity.Text = selected.Количество.ToString("0.####");
 
-                // Блокируем комбобоксы, так как нельзя менять первичный ключ EF Core "на лету"
                 CmbProduct.IsEnabled = false;
                 CmbMaterial.IsEnabled = false;
             }
@@ -79,7 +75,6 @@ namespace WpfApp1.Pages
             CmbMaterial.SelectedIndex = -1;
             TxtQuantity.Text = "0";
 
-            // Разблокируем комбобоксы для создания новой записи
             CmbProduct.IsEnabled = true;
             CmbMaterial.IsEnabled = true;
         }
@@ -103,7 +98,6 @@ namespace WpfApp1.Pages
 
             if (_currentComposition == null)
             {
-                // Проверка на дубликаты
                 bool exists = _context.СоставПродукцииs.Any(c => c.IdПродукта == prodId && c.IdМатериала == matId);
                 if (exists)
                 {
@@ -122,7 +116,6 @@ namespace WpfApp1.Pages
             }
             else
             {
-                // Если редактируем — меняем только количество (ключи заблокированы)
                 _currentComposition.Количество = quantity;
             }
 
@@ -151,10 +144,8 @@ namespace WpfApp1.Pages
             }
         }
 
-        // Обработчик
         private void CompositionProductFilterComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => _compositionView?.Refresh();
 
-        // Фильтр
         private bool CompositionFilter(object obj)
         {
             if (obj is СоставПродукции item)

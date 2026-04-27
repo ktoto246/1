@@ -15,7 +15,6 @@ namespace WpfApp1.Pages
         private readonly УчетСебестоимостиContext _context;
         private Трудозатраты _currentLabor;
 
-        // Поле
         private ICollectionView _laborView;
 
         public LaborPage()
@@ -27,25 +26,21 @@ namespace WpfApp1.Pages
 
         private void LoadData()
         {
-            // Подтягиваем зависимость, чтобы в гриде было видно имя продукта
             _context.Трудозатратыs.Include(t => t.IdПродуктаNavigation).Load();
             _context.Продукцияs.Load();
 
             LaborGrid.ItemsSource = _context.Трудозатратыs.Local.ToObservableCollection();
             CmbProduct.ItemsSource = _context.Продукцияs.Local.ToObservableCollection();
 
-            // В конструкторе страницы (после присвоения ItemsSource для LaborDataGrid):
             _laborView = CollectionViewSource.GetDefaultView(LaborGrid.ItemsSource);
             _laborView.Filter = LaborFilter;
 
-            // Подгружаем список продуктов, которые встречаются в текущем ItemsSource (Local)
             var products = _context.Трудозатратыs.Local
                 .Select(l => l.IdПродуктаNavigation)
                 .Where(p => p != null)
                 .Distinct()
                 .ToList();
 
-            // Добавляем пункт "Все" в начало как объект Продукция
             var productList = new List<Продукция> { new Продукция { Название = "Все" } };
             productList.AddRange(products);
             LaborProductFilterComboBox.ItemsSource = productList;
@@ -140,11 +135,9 @@ namespace WpfApp1.Pages
             }
         }
 
-        // Обработчики
         private void LaborSearchTextBox_TextChanged(object sender, TextChangedEventArgs e) => _laborView?.Refresh();
         private void LaborProductFilterComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => _laborView?.Refresh();
 
-        // Фильтр: по НазваниеРаботы и выбранному продукту
         private bool LaborFilter(object obj)
         {
             if (obj is Трудозатраты item)

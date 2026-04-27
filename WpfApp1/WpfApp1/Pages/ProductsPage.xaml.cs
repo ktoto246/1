@@ -13,10 +13,9 @@ namespace WpfApp1.Pages
     {
         private readonly УчетСебестоимостиContext _context;
 
-        // Переменная для хранения продукта, который мы сейчас редактируем
         private Продукция _currentProduct;
 
-        // Поле для фильтрации
+
         private ICollectionView _productsView;
 
         public ProductsPage()
@@ -31,17 +30,15 @@ namespace WpfApp1.Pages
             _context.Продукцияs.Load();
             ProductsGrid.ItemsSource = _context.Продукцияs.Local.ToObservableCollection();
 
-            // Инициализация фильтра после присвоения ItemsSource
             if (ProductsGrid.ItemsSource != null)
             {
                 _productsView = CollectionViewSource.GetDefaultView(ProductsGrid.ItemsSource);
                 _productsView.Filter = ProductsFilter;
             }
 
-            ClearForm(); // При загрузке очищаем правую панель
+            ClearForm();
         }
 
-        // КЛИК ПО ТАБЛИЦЕ: Перекидываем данные в форму
         private void ProductsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ProductsGrid.SelectedItem is Продукция selectedProduct)
@@ -53,7 +50,6 @@ namespace WpfApp1.Pages
             }
         }
 
-        // ОЧИСТИТЬ ФОРМУ: Готовимся к добавлению нового товара
         private void ClearBtn_Click(object sender, RoutedEventArgs e)
         {
             ClearForm();
@@ -68,10 +64,8 @@ namespace WpfApp1.Pages
             TxtTotalCost.Text = "0.00";
         }
 
-        // СОХРАНЕНИЕ: Ебашим валидацию и сохраняем
         private void SaveBtn_Click(object sender, RoutedEventArgs e)
         {
-            // 1. ЖЕСТКАЯ ВАЛИДАЦИЯ
             string name = TxtName.Text.Trim();
             if (string.IsNullOrEmpty(name))
             {
@@ -79,17 +73,14 @@ namespace WpfApp1.Pages
                 return;
             }
 
-            // Пытаемся конвертировать текст в число (decimal)
             if (!decimal.TryParse(TxtOverhead.Text.Replace('.', ','), out decimal overhead) || overhead < 0)
             {
                 MessageBox.Show("Накладные расходы должны быть положительным числом!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // 2. ДОБАВЛЕНИЕ ИЛИ ОБНОВЛЕНИЕ
             if (_currentProduct == null)
             {
-                // Если мы создаем новый
                 var newProduct = new Продукция
                 {
                     Название = name,
@@ -97,24 +88,21 @@ namespace WpfApp1.Pages
                     Себестоимость = 0
                 };
                 _context.Продукцияs.Add(newProduct);
-                _currentProduct = newProduct; // Делаем его текущим
+                _currentProduct = newProduct; 
             }
             else
             {
-                // Если обновляем существующий
                 _currentProduct.Название = name;
                 _currentProduct.НакладныеРасходы = overhead;
             }
 
-            // 3. ПУШИМ В БД
             try
             {
                 _context.SaveChanges();
-                ProductsGrid.Items.Refresh(); // Обновляем грид
+                ProductsGrid.Items.Refresh();
                 _productsView?.Refresh();
                 MessageBox.Show("Данные успешно сохранены!", "Ок", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                // Чтобы в форме показался сгенерированный ID и форматирование
                 ProductsGrid.SelectedItem = _currentProduct;
             }
             catch (System.Exception ex)
@@ -123,7 +111,6 @@ namespace WpfApp1.Pages
             }
         }
 
-        // УДАЛЕНИЕ
         private void DeleteBtn_Click(object sender, RoutedEventArgs e)
         {
             if (_currentProduct == null)
@@ -142,7 +129,6 @@ namespace WpfApp1.Pages
             }
         }
 
-        // МАССОВЫЙ РАСЧЕТ (оставляем как было)
         private void CalcBtn_Click(object sender, RoutedEventArgs e)
         {
             var products = _context.Продукцияs
@@ -162,7 +148,6 @@ namespace WpfApp1.Pages
             ProductsGrid.Items.Refresh();
             _productsView?.Refresh();
 
-            // Если сейчас выбран какой-то продукт, обновим его итог в карточке справа
             if (_currentProduct != null)
             {
                 TxtTotalCost.Text = _currentProduct.Себестоимость.ToString("0.00");
@@ -171,13 +156,11 @@ namespace WpfApp1.Pages
             MessageBox.Show("Расчет завершен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        // Обработчик TextChanged для поиска
         private void ProductsSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             _productsView?.Refresh();
         }
 
-        // Фильтр (ищет подстроку в свойстве "Название")
         private bool ProductsFilter(object obj)
         {
             if (obj is Продукция item)
