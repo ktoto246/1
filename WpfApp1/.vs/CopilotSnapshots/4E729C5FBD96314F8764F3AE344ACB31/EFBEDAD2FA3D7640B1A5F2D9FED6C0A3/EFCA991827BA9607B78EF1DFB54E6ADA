@@ -1,0 +1,187 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows.Controls;
+using System.Windows.Data;
+using Microsoft.EntityFrameworkCore;
+using WpfApp1.Models;
+
+namespace WpfApp1.Pages
+{
+    public partial class LaborPage : Page
+    {
+        private readonly УчетСебестоимостиContext _context;
+        private Трудозатраты _currentLabor;
+
+        // Поле
+        private ICollectionView _laborView;
+
+        public LaborPage()
+        {
+            InitializeComponent();
+            _context = new УчетСебестоимостиContext();
+            LoadData();
+        }
+
+        private void LoadData()
+        {
+            // Подтягиваем зависимость, чтобы в гриде было видно имя продукта
+            _context.Трудозатратыs.Include(t => t.IdПродуктаNavigation).Load();
+            _context.Продукцияs.Load();
+
+            LaborGrid.ItemsSource = _context.Трудозатратыs.Local.ToObservableCollection();
+            CmbProduct.ItemsSource = _context.Продукцияs.Local.ToObservableCollection();
+
+            // В конструкторе страницы (после присвоения ItemsSource для LaborDataGrid):
+            _laborView = CollectionViewSource.GetDefaultView(LaborGrid.ItemsSource);
+            _laborView.Filter = LaborFilter;
+
+            // Подгружаем список продуктов, которые встречаются в текущем ItemsSource (Local)
+            var products = (LaborGrid.ItemsSource as System.Collections.IEnumerable)?
+                .Cast<object>()
+                .Select(l => l?.GetType().GetProperty("Продукт")?.GetValue(l))
+                .Where(p => p != null)
+                .Distinct()
+                .ToList() ?? new List<object>();
+
+            // Добавляем пункт "Все" в начало
+            var productList = new List<object> { "Все" };
+            productList.AddRange(products);
+            LaborProductFilterComboBox.ItemsSource = productList;
+            LaborProductFilterComboBox.SelectedIndex = 0;
+
+            ClearForm();
+        }
+
+        private void LaborGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (LaborGrid.SelectedItem is Трудозатраты selected)
+            {
+                _currentLabor = selected;
+                CmbProduct.SelectedValue = selected.IdПродукта;
+                TxtWorkName.Text = selected.НазваниеРаботы;
+                TxtCost.Text = selected.СтоимостьРаботы.ToString("0.##");
+            }
+        }
+
+        private void ClearBtn_Click(object sender, RoutedEventArgs e) => ClearForm();
+
+        private void ClearForm()
+        {
+            LaborGrid.SelectedItem = null;
+            _currentLabor = null;
+            CmbProduct.SelectedIndex = -1;
+            TxtWorkName.Text = string.Empty;
+            TxtCost.Text = "0";
+        }
+
+        private void SaveBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (CmbProduct.SelectedValue == null)
+            {
+                MessageBox.Show("Выберите продукт из списка!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            string workName = TxtWorkName.Text.Trim();
+            if (string.IsNullOrEmpty(workName))
+            {
+                MessageBox.Show("Введите название работы!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!decimal.TryParse(TxtCost.Text.Replace('.', ','), out decimal cost) || cost < 0)
+            {
+                MessageBox.Show("Стоимость должна быть положительным числом!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (_currentLabor == null)
+            {
+                var newLabor = new Трудозатраты
+                {
+                    IdПродукта = (int)CmbProduct.SelectedValue,
+                    НазваниеРаботы = workName,
+                    СтоимостьРаботы = cost
+                };
+                _context.Трудозатратыs.Add(newLabor);
+                _currentLabor = newLabor;
+            }
+            else
+            {
+                _currentLabor.IdПродукта = (int)CmbProduct.SelectedValue;
+                _currentLabor.НазваниеРаботы = workName;
+                _currentLabor.СтоимостьРаботы = cost;
+            }
+
+            try
+            {
+                _context.SaveChanges();
+                LaborGrid.Items.Refresh();
+                MessageBox.Show("Трудозатраты сохранены!", "Ок", MessageBoxButton.OK, MessageBoxImage.Information);
+                LaborGrid.SelectedItem = _currentLabor;
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"Ошибка БД: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void DeleteBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentLabor == null) return;
+
+            if (MessageBox.Show($"Удалить операцию '{_currentLabor.НазваниеРаботы}'?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                _context.Трудозатратыs.Remove(_currentLabor);
+                _context.SaveChanges();
+                ClearForm();
+            }
+        }
+
+        // Обработчики
+        private void LaborSearchTextBox_TextChanged(object sender, TextChangedEventArgs e) => _laborView?.Refresh();
+        private void LaborProductFilterComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) => _laborView?.Refresh();
+
+        // Фильтр: по НазваниеРаботы и выбранному продукту
+        private bool LaborFilter(object obj)
+        {
+            if (obj == null) return false;
+
+            var search = (LaborSearchTextBox?.Text ?? string.Empty).Trim();
+            if (!string.IsNullOrEmpty(search))
+            {
+                var propName = obj.GetType().GetProperty("НазваниеРаботы");
+                var name = propName?.GetValue(obj) as string;
+                if (string.IsNullOrEmpty(name) || name.IndexOf(search, StringComparison.CurrentCultureIgnoreCase) < 0)
+                    return false;
+            }
+
+            var selected = LaborProductFilterComboBox.SelectedItem;
+            if (selected == null || (selected is string s && s == "Все")) return true;
+
+            var propProduct = obj.GetType().GetProperty("Продукт");
+            var itemProduct = propProduct?.GetValue(obj);
+            return AreSameEntity(itemProduct, selected);
+        }
+
+        // Вспомогательный метод сравнения сущностей (по Id или по Название или по ссылке)
+        private bool AreSameEntity(object a, object b)
+        {
+            if (a == null || b == null) return false;
+            if (ReferenceEquals(a, b)) return true;
+
+            var idA = a.GetType().GetProperty("Id")?.GetValue(a);
+            var idB = b.GetType().GetProperty("Id")?.GetValue(b);
+            if (idA != null && idB != null) return idA.Equals(idB);
+
+            var nameA = a.GetType().GetProperty("Название")?.GetValue(a) as string;
+            var nameB = b.GetType().GetProperty("Название")?.GetValue(b) as string;
+            if (!string.IsNullOrEmpty(nameA) && !string.IsNullOrEmpty(nameB))
+                return string.Equals(nameA, nameB, StringComparison.CurrentCultureIgnoreCase);
+
+            return a.Equals(b);
+        }
+    }
+}

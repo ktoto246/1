@@ -1,0 +1,186 @@
+﻿using System;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using Microsoft.EntityFrameworkCore;
+using WpfApp1.Models;
+
+namespace WpfApp1.Pages
+{
+    public partial class ProductsPage : Page
+    {
+        private readonly УчетСебестоимостиContext _context;
+
+        // Переменная для хранения продукта, который мы сейчас редактируем
+        private Продукция _currentProduct;
+
+        // Добавить using (если ещё нет)
+        private ICollectionView _productsView;
+
+        public ProductsPage()
+        {
+            InitializeComponent();
+            _context = new УчетСебестоимостиContext();
+            LoadData();
+
+            // В конструкторе страницы (после InitializeComponent() и после присвоения ItemsSource DataGrid):
+            // Предполагается, что ваш DataGrid называется ProductsDataGrid
+            _productsView = CollectionViewSource.GetDefaultView(ProductsDataGrid.ItemsSource);
+            _productsView.Filter = ProductsFilter;
+        }
+
+        private void LoadData()
+        {
+            _context.Продукцияs.Load();
+            ProductsGrid.ItemsSource = _context.Продукцияs.Local.ToObservableCollection();
+            ClearForm(); // При загрузке очищаем правую панель
+        }
+
+        // КЛИК ПО ТАБЛИЦЕ: Перекидываем данные в форму
+        private void ProductsGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ProductsGrid.SelectedItem is Продукция selectedProduct)
+            {
+                _currentProduct = selectedProduct;
+                TxtName.Text = selectedProduct.Название;
+                TxtOverhead.Text = selectedProduct.НакладныеРасходы.ToString("0.##");
+                TxtTotalCost.Text = selectedProduct.Себестоимость.ToString("0.00");
+            }
+        }
+
+        // ОЧИСТИТЬ ФОРМУ: Готовимся к добавлению нового товара
+        private void ClearBtn_Click(object sender, RoutedEventArgs e)
+        {
+            ClearForm();
+        }
+
+        private void ClearForm()
+        {
+            ProductsGrid.SelectedItem = null;
+            _currentProduct = null;
+            TxtName.Text = string.Empty;
+            TxtOverhead.Text = "0";
+            TxtTotalCost.Text = "0.00";
+        }
+
+        // СОХРАНЕНИЕ: Ебашим валидацию и сохраняем
+        private void SaveBtn_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. ЖЕСТКАЯ ВАЛИДАЦИЯ
+            string name = TxtName.Text.Trim();
+            if (string.IsNullOrEmpty(name))
+            {
+                MessageBox.Show("Название не может быть пустым!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Пытаемся конвертировать текст в число (decimal)
+            if (!decimal.TryParse(TxtOverhead.Text.Replace('.', ','), out decimal overhead) || overhead < 0)
+            {
+                MessageBox.Show("Накладные расходы должны быть положительным числом!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // 2. ДОБАВЛЕНИЕ ИЛИ ОБНОВЛЕНИЕ
+            if (_currentProduct == null)
+            {
+                // Если мы создаем новый
+                var newProduct = new Продукция
+                {
+                    Название = name,
+                    НакладныеРасходы = overhead,
+                    Себестоимость = 0
+                };
+                _context.Продукцияs.Add(newProduct);
+                _currentProduct = newProduct; // Делаем его текущим
+            }
+            else
+            {
+                // Если обновляем существующий
+                _currentProduct.Название = name;
+                _currentProduct.НакладныеРасходы = overhead;
+            }
+
+            // 3. ПУШИМ В БД
+            try
+            {
+                _context.SaveChanges();
+                ProductsGrid.Items.Refresh(); // Обновляем грид
+                MessageBox.Show("Данные успешно сохранены!", "Ок", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Чтобы в форме показался сгенерированный ID и форматирование
+                ProductsGrid.SelectedItem = _currentProduct;
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"Ошибка базы: {ex.Message}", "Пиздец", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // УДАЛЕНИЕ
+        private void DeleteBtn_Click(object sender, RoutedEventArgs e)
+        {
+            if (_currentProduct == null)
+            {
+                MessageBox.Show("Выбери товар в таблице для удаления!", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (MessageBox.Show($"Точно снести '{_currentProduct.Название}'?", "Подтверждение", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                _context.Продукцияs.Remove(_currentProduct);
+                _context.SaveChanges();
+                ClearForm();
+            }
+        }
+
+        // МАССОВЫЙ РАСЧЕТ (оставляем как было)
+        private void CalcBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var products = _context.Продукцияs
+                .Include(p => p.СоставПродукцииs)
+                    .ThenInclude(c => c.IdМатериалаNavigation)
+                .Include(p => p.Трудозатратыs)
+                .ToList();
+
+            foreach (var product in products)
+            {
+                decimal materialSum = product.СоставПродукцииs.Sum(c => c.Количество * c.IdМатериалаNavigation.ЦенаЗаЕдиницу);
+                decimal laborSum = product.Трудозатратыs.Sum(l => l.СтоимостьРаботы);
+                product.Себестоимость = product.НакладныеРасходы + materialSum + laborSum;
+            }
+
+            _context.SaveChanges();
+            ProductsGrid.Items.Refresh();
+
+            // Если сейчас выбран какой-то продукт, обновим его итог в карточке справа
+            if (_currentProduct != null)
+            {
+                TxtTotalCost.Text = _currentProduct.Себестоимость.ToString("0.00");
+            }
+
+            MessageBox.Show("Расчет завершен!", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // Обработчик TextChanged
+        private void ProductsSearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            _productsView?.Refresh();
+        }
+
+        // Фильтр (ищет подстроку в свойстве "Название")
+        private bool ProductsFilter(object obj)
+        {
+            if (obj == null) return false;
+            var filter = (ProductsSearchTextBox?.Text ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(filter)) return true;
+
+            var prop = obj.GetType().GetProperty("Название");
+            if (prop == null) return true;
+            var value = prop.GetValue(obj) as string;
+            return !string.IsNullOrEmpty(value) && value.IndexOf(filter, StringComparison.CurrentCultureIgnoreCase) >= 0;
+        }
+    }
+}
