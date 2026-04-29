@@ -7,7 +7,7 @@ namespace WpfApp1
         public MainWindow()
         {
             InitializeComponent();
-            MainFrame.Navigate(new Pages.ProductsPage()); 
+
         }
 
         private void BtnProducts_Click(object sender, RoutedEventArgs e)

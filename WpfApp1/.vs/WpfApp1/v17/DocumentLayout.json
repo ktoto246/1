@@ -1,12 +1,70 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "D:\\\u041A\u0443\u0440\u0441\u043E\u0432\u044B\u0435\\\u0421\u0435\u043C\u0435\u043D\\WpfApp1\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{AC095AA1-A4A5-46A2-BC2B-B7FA33E13FB2}|WpfApp1\\WpfApp1.csproj|d:\\\u043A\u0443\u0440\u0441\u043E\u0432\u044B\u0435\\\u0441\u0435\u043C\u0435\u043D\\wpfapp1\\wpfapp1\\mainwindow.xaml.cs||{8B382828-6202-11D1-8870-0000F87579D2}|",
+      "RelativeMoniker": "D:0:0:{AC095AA1-A4A5-46A2-BC2B-B7FA33E13FB2}|WpfApp1\\WpfApp1.csproj|solutionrelative:wpfapp1\\mainwindow.xaml.cs||{8B382828-6202-11D1-8870-0000F87579D2}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AC095AA1-A4A5-46A2-BC2B-B7FA33E13FB2}|WpfApp1\\WpfApp1.csproj|d:\\\u043A\u0443\u0440\u0441\u043E\u0432\u044B\u0435\\\u0441\u0435\u043C\u0435\u043D\\wpfapp1\\wpfapp1\\pages\\productspage.xaml.cs||{8B382828-6202-11D1-8870-0000F87579D2}|",
+      "RelativeMoniker": "D:0:0:{AC095AA1-A4A5-46A2-BC2B-B7FA33E13FB2}|WpfApp1\\WpfApp1.csproj|solutionrelative:wpfapp1\\pages\\productspage.xaml.cs||{8B382828-6202-11D1-8870-0000F87579D2}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AC095AA1-A4A5-46A2-BC2B-B7FA33E13FB2}|WpfApp1\\WpfApp1.csproj|d:\\\u043A\u0443\u0440\u0441\u043E\u0432\u044B\u0435\\\u0441\u0435\u043C\u0435\u043D\\wpfapp1\\wpfapp1\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{AC095AA1-A4A5-46A2-BC2B-B7FA33E13FB2}|WpfApp1\\WpfApp1.csproj|solutionrelative:wpfapp1\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ProductsPage.xaml.cs",
+              "DocumentMoniker": "D:\\\u041A\u0443\u0440\u0441\u043E\u0432\u044B\u0435\\\u0421\u0435\u043C\u0435\u043D\\WpfApp1\\WpfApp1\\Pages\\ProductsPage.xaml.cs",
+              "RelativeDocumentMoniker": "WpfApp1\\Pages\\ProductsPage.xaml.cs",
+              "ToolTip": "D:\\\u041A\u0443\u0440\u0441\u043E\u0432\u044B\u0435\\\u0421\u0435\u043C\u0435\u043D\\WpfApp1\\WpfApp1\\Pages\\ProductsPage.xaml.cs",
+              "RelativeToolTip": "WpfApp1\\Pages\\ProductsPage.xaml.cs",
+              "ViewState": "AgIAAJQAAAAAAAAAAAAowLEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-29T15:18:55.452Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainWindow.xaml.cs",
+              "DocumentMoniker": "D:\\\u041A\u0443\u0440\u0441\u043E\u0432\u044B\u0435\\\u0421\u0435\u043C\u0435\u043D\\WpfApp1\\WpfApp1\\MainWindow.xaml.cs",
+              "RelativeDocumentMoniker": "WpfApp1\\MainWindow.xaml.cs",
+              "ToolTip": "D:\\\u041A\u0443\u0440\u0441\u043E\u0432\u044B\u0435\\\u0421\u0435\u043C\u0435\u043D\\WpfApp1\\WpfApp1\\MainWindow.xaml.cs*",
+              "RelativeToolTip": "WpfApp1\\MainWindow.xaml.cs*",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAAACQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-29T15:10:38.278Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MainWindow.xaml",
+              "DocumentMoniker": "D:\\\u041A\u0443\u0440\u0441\u043E\u0432\u044B\u0435\\\u0421\u0435\u043C\u0435\u043D\\WpfApp1\\WpfApp1\\MainWindow.xaml",
+              "RelativeDocumentMoniker": "WpfApp1\\MainWindow.xaml",
+              "ToolTip": "D:\\\u041A\u0443\u0440\u0441\u043E\u0432\u044B\u0435\\\u0421\u0435\u043C\u0435\u043D\\WpfApp1\\WpfApp1\\MainWindow.xaml",
+              "RelativeToolTip": "WpfApp1\\MainWindow.xaml",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-04-29T15:07:31.972Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }
