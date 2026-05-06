@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "kYtf47lPl+0=",
+  "dgSpecHash": "n04Xgj+2AuA=",
   "success": true,
-  "projectFilePath": "D:\\Курсовые\\Семен\\WpfApp1\\WpfApp1\\WpfApp1.csproj",
+  "projectFilePath": "D:\\Новая папка (2)\\WpfApp1\\WpfApp1\\WpfApp1.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Кирилл\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\Кирилл\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
@@ -88,9 +88,9 @@
       "code": "NU1701",
       "level": "Warning",
       "message": "Пакет \"LiveCharts 0.9.7\" был восстановлен с помощью \".NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1\", а не целевой платформы проекта \"net8.0-windows7.0\". Этот пакет может быть не полностью совместим с вашим проектом.",
-      "projectPath": "D:\\Курсовые\\Семен\\WpfApp1\\WpfApp1\\WpfApp1.csproj",
+      "projectPath": "D:\\Новая папка (2)\\WpfApp1\\WpfApp1\\WpfApp1.csproj",
       "warningLevel": 1,
-      "filePath": "D:\\Курсовые\\Семен\\WpfApp1\\WpfApp1\\WpfApp1.csproj",
+      "filePath": "D:\\Новая папка (2)\\WpfApp1\\WpfApp1\\WpfApp1.csproj",
       "libraryId": "LiveCharts",
       "targetGraphs": [
         "net8.0-windows7.0"
@@ -100,9 +100,9 @@
       "code": "NU1701",
       "level": "Warning",
       "message": "Пакет \"LiveCharts.Wpf 0.9.7\" был восстановлен с помощью \".NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1\", а не целевой платформы проекта \"net8.0-windows7.0\". Этот пакет может быть не полностью совместим с вашим проектом.",
-      "projectPath": "D:\\Курсовые\\Семен\\WpfApp1\\WpfApp1\\WpfApp1.csproj",
+      "projectPath": "D:\\Новая папка (2)\\WpfApp1\\WpfApp1\\WpfApp1.csproj",
       "warningLevel": 1,
-      "filePath": "D:\\Курсовые\\Семен\\WpfApp1\\WpfApp1\\WpfApp1.csproj",
+      "filePath": "D:\\Новая папка (2)\\WpfApp1\\WpfApp1\\WpfApp1.csproj",
       "libraryId": "LiveCharts.Wpf",
       "targetGraphs": [
         "net8.0-windows7.0"
