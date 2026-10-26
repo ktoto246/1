@@ -1,0 +1,13 @@
+@model WebApplication1.ViewModels.RepairRequestFormViewModel
+@{ ViewData["Title"] = "Сообщить о поломке"; }
+<div class="page-heading"><div><h1 class="page-title">Сообщить о поломке</h1><p class="page-subtitle">Выберите технику и расскажите, что произошло. Заявку увидит диспетчер.</p></div><a asp-action="Index">К списку заявок</a></div>
+<div class="panel" style="max-width: 760px">
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div class="mb-3"><label asp-for="EquipmentId" class="form-label"></label><select asp-for="EquipmentId" asp-items="ViewBag.Equipments" class="form-select"><option value="">Выберите технику</option></select><span asp-validation-for="EquipmentId" class="text-danger"></span></div>
+        <div class="mb-3"><label asp-for="EngineHours" class="form-label"></label><input asp-for="EngineHours" class="form-control" type="number" step="0.1" min="0" /><span asp-validation-for="EngineHours" class="text-danger"></span></div>
+        <div class="mb-4"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="5" placeholder="Опишите признаки поломки и условия, при которых она возникла"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
+        <button type="submit" class="btn btn-primary">Отправить заявку</button>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
