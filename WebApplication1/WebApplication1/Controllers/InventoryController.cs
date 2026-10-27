@@ -16,7 +16,10 @@ public sealed class InventoryController(ApplicationDbContext db, IWebHostEnviron
     {
         var parts = await db.Parts.AsNoTracking().OrderBy(part => part.Article).Select(part => new PartStockListItemViewModel
         {
-            Id = part.Id, Article = part.Article, Name = part.Name, Unit = part.Unit,
+            Id = part.Id,
+            Article = part.Article,
+            Name = part.Name,
+            Unit = part.Unit,
             Available = db.StockBatches.Where(batch => batch.PartId == part.Id).Sum(batch => (decimal?)batch.AvailableQuantity) ?? 0m,
             Reserved = db.StockBatches.Where(batch => batch.PartId == part.Id).Sum(batch => (decimal?)batch.ReservedQuantity) ?? 0m
         }).ToListAsync();
@@ -57,46 +60,30 @@ public sealed class InventoryController(ApplicationDbContext db, IWebHostEnviron
         return View(purchases);
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
+    [HttpGet]
     public async Task<IActionResult> Receive(int id)
     {
-        var purchase = await db.Purchases.Include(item => item.Lines).FirstOrDefaultAsync(item => item.Id == id);
-        if (purchase is null) return NotFound();
-        if (purchase.Status is PurchaseStatus.Received or PurchaseStatus.Cancelled) { TempData["Error"] = "Эту закупку нельзя принять повторно."; return RedirectToAction(nameof(Purchases)); }
+        var purchase = await db.Purchases
+            .Include(p => p.Supplier)
+            .Include(p => p.Lines).ThenInclude(l => l.Part)
+            .FirstOrDefaultAsync(p => p.Id == id);
 
-        var now = DateTime.UtcNow;
-        foreach (var line in purchase.Lines)
-        {
-            var received = line.OrderedQuantity - line.ReceivedQuantity;
-            if (received <= 0) continue;
-            line.ReceivedQuantity += received;
-            db.StockBatches.Add(new StockBatch { PartId = line.PartId, PurchaseLineId = line.Id, ReceivedQuantity = received, AvailableQuantity = received, UnitCost = line.UnitPrice, ReceivedAtUtc = now });
-        }
-        purchase.Status = PurchaseStatus.Received; purchase.ReceivedAtUtc = now;
-        await db.SaveChangesAsync();
-        TempData["Success"] = "Поступление принято на склад.";
-        return RedirectToAction(nameof(Purchases));
+        if (purchase == null) return NotFound();
+
+        return View(purchase);
     }
 
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Receive(int id, IFormFile? receipt)
+    [HttpPost, ActionName("Receive"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReceiveConfirmed(int id)
     {
         var purchase = await db.Purchases.Include(item => item.Lines).FirstOrDefaultAsync(item => item.Id == id);
         if (purchase is null) return NotFound();
-        if (purchase.Status is PurchaseStatus.Received or PurchaseStatus.Cancelled) { TempData["Error"] = "Эту закупку нельзя принять повторно."; return RedirectToAction(nameof(Purchases)); }
-        if (receipt is not null)
+        if (purchase.Status is PurchaseStatus.Received or PurchaseStatus.Cancelled)
         {
-            if (receipt.Length == 0 || receipt.Length > 10 * 1024 * 1024 || !string.Equals(Path.GetExtension(receipt.FileName), ".pdf", StringComparison.OrdinalIgnoreCase)) { TempData["Error"] = "Приложите PDF-файл размером не более 10 МБ."; return RedirectToAction(nameof(Receive), new { id }); }
-            await using var stream = receipt.OpenReadStream();
-            var header = new byte[5];
-            if (await stream.ReadAsync(header) != 5 || System.Text.Encoding.ASCII.GetString(header) != "%PDF-") { TempData["Error"] = "Файл не является корректным PDF."; return RedirectToAction(nameof(Receive), new { id }); }
-            stream.Position = 0;
-            var folder = Path.Combine(environment.ContentRootPath, "App_Data", "Receipts"); Directory.CreateDirectory(folder);
-            var stored = Guid.NewGuid().ToString("N") + ".pdf";
-            await using var output = System.IO.File.Create(Path.Combine(folder, stored));
-            await receipt.CopyToAsync(output);
-            purchase.ReceiptStoredFileName = stored; purchase.ReceiptOriginalFileName = Path.GetFileName(receipt.FileName);
+            TempData["Error"] = "Эту закупку нельзя принять повторно.";
+            return RedirectToAction(nameof(Purchases));
         }
+
         var now = DateTime.UtcNow;
         foreach (var line in purchase.Lines)
         {
@@ -105,8 +92,13 @@ public sealed class InventoryController(ApplicationDbContext db, IWebHostEnviron
             line.ReceivedQuantity += received;
             db.StockBatches.Add(new StockBatch { PartId = line.PartId, PurchaseLineId = line.Id, ReceivedQuantity = received, AvailableQuantity = received, UnitCost = line.UnitPrice, ReceivedAtUtc = now });
         }
-        purchase.Status = PurchaseStatus.Received; purchase.ReceivedAtUtc = now;
-        await db.SaveChangesAsync(); TempData["Success"] = "Поступление принято на склад."; return RedirectToAction(nameof(Purchases));
+
+        purchase.Status = PurchaseStatus.Received;
+        purchase.ReceivedAtUtc = now;
+        await db.SaveChangesAsync();
+
+        TempData["Success"] = "Поступление принято на склад.";
+        return RedirectToAction(nameof(Purchases));
     }
 
     private async Task PopulatePurchaseOptionsAsync()
@@ -114,6 +106,7 @@ public sealed class InventoryController(ApplicationDbContext db, IWebHostEnviron
         ViewBag.Parts = new SelectList(await db.Parts.OrderBy(part => part.Article).Select(part => new { part.Id, Name = part.Article + " — " + part.Name }).ToListAsync(), "Id", "Name");
         ViewBag.Suppliers = new SelectList(await db.Suppliers.OrderBy(supplier => supplier.Name).ToListAsync(), "Id", "Name");
     }
+
     public async Task<IActionResult> Batches(int partId)
     {
         var part = await db.Parts.FindAsync(partId);

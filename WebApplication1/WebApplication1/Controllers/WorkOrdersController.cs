@@ -174,27 +174,46 @@ public sealed class WorkOrdersController(ApplicationDbContext db, SchedulingServ
         return RedirectToAction(nameof(Details), new { id });
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken]
     [Authorize(Roles = AppRoles.Administrator + "," + AppRoles.Dispatcher + "," + AppRoles.Mechanic)]
     public async Task<IActionResult> AddRequirement(int id, PartRequirementFormViewModel model)
     {
-        var order = await db.WorkOrders
-            .Include(item => item.Stages).ThenInclude(stage => stage.Assignments)
-            .FirstOrDefaultAsync(item => item.Id == id);
-
+        var order = await db.WorkOrders.Include(item => item.Stages).ThenInclude(stage => stage.Assignments).FirstOrDefaultAsync(item => item.Id == id);
         if (order is null || !await CanAccessAsync(order)) return NotFound();
-        if (order.Status is WorkOrderStatus.Completed or WorkOrderStatus.Cancelled) { TempData["Error"] = "Нельзя запросить деталь для завершённого или отменённого наряда."; return RedirectToAction(nameof(Details), new { id }); }
-        if (!await db.Parts.AnyAsync(part => part.Id == model.PartId)) ModelState.AddModelError(nameof(model.PartId), "Деталь недоступна.");
-        if (!ModelState.IsValid) { TempData["Error"] = "Проверьте выбранную деталь и количество."; return RedirectToAction(nameof(Details), new { id }); }
 
-        var requirement = await db.PartRequirements.FirstOrDefaultAsync(item => item.WorkOrderId == id && item.PartId == model.PartId && item.Status == RequirementStatus.Open);
-        if (requirement is null) db.PartRequirements.Add(new PartRequirement { WorkOrderId = id, PartId = model.PartId, Quantity = model.Quantity, Comment = model.Comment?.Trim() });
-        else { requirement.Quantity += model.Quantity; requirement.Comment = model.Comment?.Trim() ?? requirement.Comment; }
+        if (model.PartId == null && string.IsNullOrWhiteSpace(model.CustomName))
+        {
+            TempData["Error"] = "Выберите деталь или напишите её название!";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        db.PartRequirements.Add(new PartRequirement
+        {
+            WorkOrderId = id,
+            PartId = model.PartId,
+            CustomName = model.CustomName?.Trim(),
+            Quantity = model.Quantity,
+            Comment = model.Comment?.Trim()
+        });
 
         await db.SaveChangesAsync();
-        TempData["Success"] = "Потребность в детали добавлена. Диспетчер сможет оформить закупку или выделить остаток.";
+        TempData["Success"] = "Потребность добавлена.";
         return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = AppRoles.Administrator + "," + AppRoles.Dispatcher)]
+    public async Task<IActionResult> BindCustomRequirement(int id, int realPartId)
+    {
+        var req = await db.PartRequirements.FindAsync(id);
+        if (req == null || req.PartId != null) return NotFound();
+
+        req.PartId = realPartId;
+        req.CustomName = null;
+        await db.SaveChangesAsync();
+
+        TempData["Success"] = "Деталь привязана к справочнику. Теперь её можно зарезервировать.";
+        return RedirectToAction(nameof(Details), new { id = req.WorkOrderId });
     }
 
     [HttpPost]

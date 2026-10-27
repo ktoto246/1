@@ -83,15 +83,26 @@
                             @foreach (var need in Model.Requirements)
                             {
                                 <tr>
-                                    <td>@need.Part.Name</td>
-                                    <td>@need.Quantity.ToString("0.###") @need.Part.Unit</td>
-                                    <td>@need.ReservedQuantity.ToString("0.###") @need.Part.Unit</td>
-                                    <td>@need.IssuedQuantity.ToString("0.###") @need.Part.Unit</td>
+                                    <td>@(need.PartId != null ? need.Part.Name : $"⚠️ Свободный запрос: {need.CustomName}")</td>
+                                    <td>@need.Quantity.ToString("0.###") @(need.PartId != null ? need.Part.Unit : "шт.")</td>
+                                    <td>@need.ReservedQuantity.ToString("0.###") @(need.PartId != null ? need.Part.Unit : "шт.")</td>
+                                    <td>@need.IssuedQuantity.ToString("0.###") @(need.PartId != null ? need.Part.Unit : "шт.")</td>
                                     <td>
                                         @(need.Status == RequirementStatus.Fulfilled ? "Обеспечена" : need.Status == RequirementStatus.Cancelled ? "Отменена" : "Открыта")
                                     </td>
                                     <td>
-                                        @if (canManage && need.Status == RequirementStatus.Open)
+                                        @if (canManage && need.PartId == null)
+                                        {
+                                            <form asp-action="BindCustomRequirement" asp-route-id="@need.Id" method="post" class="mb-1">
+                                                <div class="input-group input-group-sm">
+                                                    <select name="realPartId" class="form-select" asp-items="ViewBag.Parts" required>
+                                                        <option value="">Привязать деталь...</option>
+                                                    </select>
+                                                    <button class="btn btn-success">✔</button>
+                                                </div>
+                                            </form>
+                                        }
+                                        @if (canManage && need.Status == RequirementStatus.Open && need.PartId != null)
                                         {
                                             <form asp-action="ReserveRequirement" asp-route-id="@need.Id" method="post" class="mb-1">
                                                 <button class="btn btn-sm btn-outline-primary w-100">Резервировать</button>
@@ -129,17 +140,16 @@
                 <form asp-action="AddRequirement" asp-route-id="@order.Id" method="post" class="border-top pt-3 mt-3">
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <select name="PartId" asp-items="ViewBag.Parts" class="form-select">
-                                <option value="">Выберите деталь</option>
+                            <select name="PartId" asp-items="ViewBag.Parts" class="form-select mb-2">
+                                <option value="">-- Выбрать из базы --</option>
                             </select>
+                            <input type="text" name="CustomName" class="form-control" placeholder="ИЛИ напишите название текстом" />
                         </div>
                         <div class="col-md-3">
-                            <input name="Quantity" class="form-control" type="number" step="0.001" min="0.001" placeholder="Количество" />
-                        </div>
-                        <div class="col-md-3">
+                            <input name="Quantity" class="form-control mb-2" type="number" step="0.001" min="0.001" placeholder="Кол-во" required />
                             <button class="btn btn-primary w-100">Запросить</button>
                         </div>
-                        <div class="col-12">
+                        <div class="col-12 mt-2">
                             <input name="Comment" class="form-control" placeholder="Комментарий для диспетчера" />
                         </div>
                     </div>

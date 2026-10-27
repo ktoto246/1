@@ -24,14 +24,15 @@ public class PartRequirement
 {
     public int Id { get; set; }
     public int WorkOrderId { get; set; }
-    public WorkOrder WorkOrder { get; set; } = null!;
-    public int PartId { get; set; }
-    public Part Part { get; set; } = null!;
-    [Precision(18, 3)] public decimal Quantity { get; set; }
-    [Precision(18, 3)] public decimal ReservedQuantity { get; set; }
-    [Precision(18, 3)] public decimal IssuedQuantity { get; set; }
-    public RequirementStatus Status { get; set; } = RequirementStatus.Open;
-    [StringLength(1000)] public string? Comment { get; set; }
+    public WorkOrder? WorkOrder { get; set; }
+    public int? PartId { get; set; }
+    public Part? Part { get; set; }
+    public string? CustomName { get; set; }
+    public decimal Quantity { get; set; }
+    public decimal ReservedQuantity { get; set; }
+    public decimal IssuedQuantity { get; set; }
+    public RequirementStatus Status { get; set; }
+    public string? Comment { get; set; }
 }
 
 public class Purchase

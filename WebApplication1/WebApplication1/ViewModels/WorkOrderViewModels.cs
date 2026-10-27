@@ -37,9 +37,10 @@ public sealed class WorkOrderDetailsViewModel
 
 public sealed class PartRequirementFormViewModel
 {
-    [Range(1, int.MaxValue, ErrorMessage = "Выберите деталь.")] public int PartId { get; set; }
-    [Range(typeof(decimal), "0.001", "999999", ParseLimitsInInvariantCulture = true, ConvertValueInInvariantCulture = true, ErrorMessage = "Укажите количество.")] public decimal Quantity { get; set; }
-    [StringLength(1000)] public string? Comment { get; set; }
+    public int? PartId { get; set; }
+    public string? CustomName { get; set; }
+    public decimal Quantity { get; set; }
+    public string? Comment { get; set; }
 }
 
 public sealed class WorkLogFormViewModel
